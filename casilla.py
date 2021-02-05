@@ -24,12 +24,10 @@ class Casilla():
     P_GREEN = 1
     P_RED = 2
 
-    def __init__(self, casilla=0, piece=0, row=0, col=0):
+    def __init__(self, casilla=0, ficha=0, row=0, col=0):
         self.casilla = casilla
-        """print("--------------------------")
-        print(self.casilla)"""
-        self.piece = piece
-        #print(self.piece)
+        self.ficha = ficha
+        #print(self.ficha)
 
         self.row = row
         self.col = col
