@@ -1,4 +1,10 @@
-""" Paula Camila Gonzalez Ortega
-carnet 18398 - Inteligencia Artificial
-Febrero 2021 - Semestre 7 """
+from hopper import Hopper
 
+hopper = Hopper()
+while hopper.find_winner() == None:
+    for i in hopper.tablero:
+        for j in i:
+            print(j.piece, end=" ")
+        print()
+    print("------------------------------------")
+    hopper.execute_player_move()
