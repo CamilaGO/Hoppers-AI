@@ -1,17 +1,15 @@
-# tipos de casilla (primer argumento)
-#   0 = casilla en blanco, las de en medio
-#   1 = casillas objetivo verdes, player 1 (derecha superior)
-#   2 = casillas objetivo rojo, player 2 (izquierda inferior)
-#
-# tipos de fichas (segundo argumento) 
-#   0 = sin pieza
-#   1 = ficha verde, player 1
-#   2 = ficha roja, player 2
-#
-# index 2 is the outline type
-#   0 = no outline
-#   1 = selected outline
-#   2 = just moved
+""" Argumentos a recibir
+tipos de casilla (primero)
+ 0 = casilla en blanco, las de en medio
+ 1 = casillas objetivo verdes, player 1 (derecha superior)
+ 2 = casillas objetivo rojo, player 2, AI (izquierda inferior)
+
+tipos de fichas (segundo) 
+ 0 = sin pieza
+ 1 = ficha verde, player 1
+ 2 = ficha roja, player 2, AI
+"""
+
 
 
 class Casilla():
@@ -25,11 +23,6 @@ class Casilla():
     P_NONE = 0
     P_GREEN = 1
     P_RED = 2
-
-    # Outline constants
-    O_NONE = 0
-    O_SELECT = 1
-    O_MOVED = 2
 
     def __init__(self, casilla=0, piece=0, row=0, col=0):
         self.casilla = casilla
