@@ -25,7 +25,7 @@ class Hopper():
         self.valid_moves = []
         self.calculando = False
         self.total_plies = 0
-        # se activa alpabeta con profundidad 3
+        # se activa alpha-beta con profundidad 3
         self.profundidad = 3
         self.ab_enabled = True
         # creacion del tablero segun la ubicacion de las casillas
@@ -50,11 +50,11 @@ class Hopper():
                         for i in fila if i.casilla == Casilla.T_GREEN]
 
         if self.ai_player == self.current_player:
-            self.execute_computer_move()
+            self.execute_ai_move()
 
 
-    def minimax(self, depth, player_to_max, max_time, a=float("-inf"),
-                b=float("inf"), maxing=True, prunes=0, tableros=0):
+    def minimax(self, depth, player_to_max, max_time, alpha=float("-inf"),
+                beta=float("inf"), maxing=True, prunes=0, tableros=0):
 
         # Bottomed out base case
         if depth == 0 or self.find_winner() or time.time() > max_time:
@@ -88,7 +88,7 @@ class Hopper():
                 # Recursively call self
                 #se vuelve a llamar de acuerdo a la profundidad programada para poder ver la mejor jugada a largo plazo
                 val, _, new_prunes, new_tableros = self.minimax(depth - 1,
-                    player_to_max, max_time, a, b, not maxing, prunes, tableros)
+                    player_to_max, max_time, alpha, beta, not maxing, prunes, tableros)
                 prunes = new_prunes
                 tableros = new_tableros
 
@@ -101,19 +101,19 @@ class Hopper():
                     """print("*************************")
                     print(to.loc)"""
                     best_move = (move["from"].loc, to.loc)
-                    a = max(a, val)
+                    alpha = max(alpha, val)
 
                 if not maxing and val < best_val:
                     best_val = val
                     best_move = (move["from"].loc, to.loc)
-                    b = min(b, val)
+                    beta = min(beta, val)
 
-                if self.ab_enabled and b <= a:
+                if self.ab_enabled and beta <= alpha:
                     return best_val, best_move, prunes + 1, tableros
 
         return best_val, best_move, prunes, tableros
 
-    def execute_computer_move(self):
+    def execute_ai_move(self):
         #print(self.ai_player, "ai_player")
 
         # Print out search information
@@ -288,14 +288,6 @@ class Hopper():
         else:
             return None
 
-    """def outline_casillas(self, casillas=[], outline_type=Casilla.O_SELECT):
-
-        if casillas is None:
-            casillas = [j for i in self.tablero for j in i]
-            outline_type = Casilla.O_NONE
-
-        for casilla in casillas:
-            casilla.outline = outline_type"""
 
     def utility_distance(self, player):
 
@@ -332,14 +324,22 @@ class Hopper():
         print("=================" + ("=" * len(str(current_turn))))
         sys.stdout.flush()
 
-        fila_old = int(input("Ingrese fila actual: "))
-        col_old = int(input("Ingrese columna actual: "))
+        inputOld = (input("Ingrese fila, columna actual: "))
+        oldLocation = inputOld.split(", ")
+        print(oldLocation)
 
-        fila_new = int(input("Ingrese fila objetivo: "))
-        col_new = int(input("Ingrese columna objetivo: "))
+        inputNew = (input("Ingrese fila, columna objetivo: "))
+        newLocation = inputNew.split(", ")
+        print(newLocation)
+
+        #fila_old = int(input("Ingrese fila actual: "))
+        #col_old = int(input("Ingrese columna actual: "))
+
+        #fila_new = int(input("Ingrese fila objetivo: "))
+        #col_new = int(input("Ingrese columna objetivo: "))
         
-        move_from = self.tablero[fila_old][col_old]
-        move_to = self.tablero[fila_new][col_new]
+        move_from = self.tablero[int(oldLocation[0])][int(oldLocation[1])]
+        move_to = self.tablero[int(newLocation[0])][int(newLocation[1])]
         self.move_ficha(move_from, move_to)
 
         winner = self.find_winner()
@@ -356,7 +356,7 @@ class Hopper():
                 if winner == Casilla.P_GREEN else "red")
             print("Total # of plies:", self.total_plies)
         elif self.ai_player is not None:
-            self.execute_computer_move()
+            self.execute_ai_move()
         else:  # Toggle the current player
             self.current_player = (Casilla.P_RED
                 if self.current_player == Casilla.P_GREEN else Casilla.P_GREEN)
