@@ -14,27 +14,27 @@ tipos de fichas (segundo)
 
 class Casilla():
 
-    # Goal constants
-    T_NONE = 0
-    T_GREEN = 1
-    T_RED = 2
+    # constantes segun la ubicacion de la casilla
+    C_VACIA = 0
+    C_VERDE = 1
+    C_ROJA = 2
 
-    # Piece constants
-    P_NONE = 0
-    P_GREEN = 1
-    P_RED = 2
+    # constantes segun la ficha
+    F_VACIA = 0
+    F_VERDE = 1
+    F_ROJA = 2
 
-    def __init__(self, casilla=0, ficha=0, row=0, col=0):
-        self.casilla = casilla
-        self.ficha = ficha
+    def __init__(self, casilla=0, ficha=0, fila=0, col=0):
+        self.casilla = casilla #el color/valor de la casilla
+        self.ficha = ficha #el color/valor de la ficha
         #print(self.ficha)
 
-        self.row = row
+        self.fila = fila
         self.col = col
-        self.loc = (row, col)
+        self.posicion = (fila, col)
 
     def __str__(self):
-        return chr(self.loc[1] + 97) + str(self.loc[0] + 1)
+        return chr(self.posicion[1] + 97) + str(self.posicion[0] + 1)
 
     def __repr__(self):
-        return chr(self.loc[1] + 97) + str(self.loc[0] + 1)
+        return chr(self.posicion[1] + 97) + str(self.posicion[0] + 1)

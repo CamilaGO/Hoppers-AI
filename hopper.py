@@ -11,7 +11,7 @@ from casilla import Casilla
 
 class Hopper():
 
-    def __init__(self, tab_size=10, t_limit=60, ai_player=Casilla.P_RED):
+    def __init__(self, tab_size=10, t_limit=60, ai_player=Casilla.F_ROJA):
 
         # tamaño del tablero e inicializacion de variables
         tablero = [[None] * tab_size for _ in range(tab_size)]
@@ -20,23 +20,22 @@ class Hopper():
         self.t_limit = t_limit
         self.ai_player = ai_player
         self.tablero = tablero
-        self.current_player = Casilla.P_GREEN #empieza a jugar el humano, jugador 1
+        self.current_player = Casilla.F_VERDE #empieza a jugar el humano, jugador 1
         self.casilla_selected = None
         self.valid_moves = []
         self.calculando = False
         self.total_plies = 0
         # se activa alpha-beta con profundidad 3
         self.profundidad = 3
-        self.ab_enabled = True
         # creacion del tablero segun la ubicacion de las casillas
         for fila in range(tab_size):
             for col in range(tab_size):
 
                 if fila + col < 5:
-                    #si es la diagonal izquierda superior se colocan las fichas de AI (player 2)
+                    #si es la diagonal izquierda superior se coposicionan las fichas de AI (player 2)
                     espacio = Casilla(2, 2, fila, col)
                 elif 1 + fila + col > 2 * (tab_size - 3):
-                    #si es la diagonal derecha inferior se colocan las fichas del humano (player 1)
+                    #si es la diagonal derecha inferior se coposicionan las fichas del humano (player 1)
                     espacio = Casilla(1, 1, fila, col)
                 else:
                     #si es el centro se deja en blanco, campo para jugar 
@@ -44,13 +43,19 @@ class Hopper():
 
                 tablero[fila][col] = espacio
 
-        self.r_goals = [i for fila in tablero
-                        for i in fila if i.casilla == Casilla.T_RED]
-        self.g_goals = [i for fila in tablero
-                        for i in fila if i.casilla == Casilla.T_GREEN]
+        #se ven las ubicaciones de las casilla rojas y se guardan
+        self.lado_rojo = []
+        for fila in tablero:
+            for i in fila:
+                if i.casilla == Casilla.C_ROJA:
+                    self.lado_rojo.append(i)
+        #se ven las ubicaciones de las casilla verdes y se guardan
+        self.lado_verde = []
+        for fila in tablero:
+            for i in fila:
+                if i.casilla == Casilla.C_VERDE:
+                    self.lado_verde.append(i)
 
-        if self.ai_player == self.current_player:
-            self.execute_ai_move()
 
 
     def minimax(self, depth, player_to_max, max_time, alpha=float("-inf"),
@@ -67,8 +72,8 @@ class Hopper():
             moves = self.get_next_moves(player_to_max)
         else:
             best_val = float("inf")
-            moves = self.get_next_moves((Casilla.P_RED
-                    if player_to_max == Casilla.P_GREEN else Casilla.P_GREEN))
+            moves = self.get_next_moves((Casilla.F_ROJA
+                    if player_to_max == Casilla.F_VERDE else Casilla.F_VERDE))
         # For each move
         for move in moves:
             #print(move)
@@ -81,7 +86,7 @@ class Hopper():
 
                 # Move ficha to the move outlined
                 ficha = move["from"].ficha
-                move["from"].ficha = Casilla.P_NONE
+                move["from"].ficha = Casilla.F_VACIA
                 to.ficha = ficha
                 tableros += 1
 
@@ -93,22 +98,22 @@ class Hopper():
                 tableros = new_tableros
 
                 # Move the ficha back
-                to.ficha = Casilla.P_NONE
+                to.ficha = Casilla.F_VACIA
                 move["from"].ficha = ficha
 
                 if maxing and val > best_val:
                     best_val = val
                     """print("*************************")
-                    print(to.loc)"""
-                    best_move = (move["from"].loc, to.loc)
+                    print(to.posicion)"""
+                    best_move = (move["from"].posicion, to.posicion)
                     alpha = max(alpha, val)
 
                 if not maxing and val < best_val:
                     best_val = val
-                    best_move = (move["from"].loc, to.loc)
+                    best_move = (move["from"].posicion, to.posicion)
                     beta = min(beta, val)
 
-                if self.ab_enabled and beta <= alpha:
+                if beta <= alpha:
                     return best_val, best_move, prunes + 1, tableros
 
         return best_val, best_move, prunes, tableros
@@ -151,19 +156,19 @@ class Hopper():
         winner = self.find_winner()
         if winner:
             print("The " + ("green"
-                if winner == Casilla.P_GREEN else "red") + " player has won!")
+                if winner == Casilla.F_VERDE else "red") + " player has won!")
             self.current_player = None
 
             print()
             print("Final Stats")
             print("===========")
             print("Final winner:", "green"
-                if winner == Casilla.P_GREEN else "red")
+                if winner == Casilla.F_VERDE else "red")
             print("Total # of plies:", self.total_plies)
 
         else:  # Toggle the current player
-            self.current_player = (Casilla.P_RED
-                if self.current_player == Casilla.P_GREEN else Casilla.P_GREEN)
+            self.current_player = (Casilla.F_ROJA
+                if self.current_player == Casilla.F_VERDE else Casilla.F_VERDE)
 
         self.calculando = False
         print()
@@ -193,17 +198,17 @@ class Hopper():
         if moves is None:
             moves = []
 
-        fila = casilla.loc[0]
-        col = casilla.loc[1]
+        fila = casilla.posicion[0]
+        col = casilla.posicion[1]
 
         # List of valid casilla types to move to
-        valid_casillas = [Casilla.T_NONE, Casilla.T_GREEN, Casilla.T_RED]
+        valid_casillas = [Casilla.C_VACIA, Casilla.C_VERDE, Casilla.C_ROJA]
         if casilla.casilla != player:
             #print("ya estas aqui men")
             valid_casillas.remove(player)  # Moving back into your own goal
-        if casilla.casilla != Casilla.T_NONE and casilla.casilla != player:
+        if casilla.casilla != Casilla.C_VACIA and casilla.casilla != player:
             #print("pa que te vassssss")
-            valid_casillas.remove(Casilla.T_NONE)  # Moving out of the enemy's goal
+            valid_casillas.remove(Casilla.C_VACIA)  # Moving out of the enemy's goal
 
         # Find and save immediately adjacent moves
         for col_delta in range(-1, 2):
@@ -231,7 +236,7 @@ class Hopper():
                     continue
                 
 
-                if new_casilla.ficha == Casilla.P_NONE:
+                if new_casilla.ficha == Casilla.F_VACIA:
                     if adj:  # Don't consider adjacent on subsequent calls 
                     #si hay un movimiento para seguirle dando
                         moves.append(new_casilla)
@@ -252,7 +257,7 @@ class Hopper():
                 if new_casilla in moves or (new_casilla.casilla not in valid_casillas):
                     continue
 
-                if new_casilla.ficha == Casilla.P_NONE:
+                if new_casilla.ficha == Casilla.F_VACIA:
                     moves.insert(0, new_casilla)  # Prioritize jumps
                     self.get_moves_at_casilla(new_casilla, player, moves, False)
 
@@ -261,13 +266,13 @@ class Hopper():
     def move_ficha(self, from_casilla, to_casilla):
 
         # Handle trying to move a non-existant ficha and moving into a ficha
-        if from_casilla.ficha == Casilla.P_NONE or to_casilla.ficha != Casilla.P_NONE:
+        if from_casilla.ficha == Casilla.F_VACIA or to_casilla.ficha != Casilla.F_VACIA:
             print("Invalid move")
             return
 
         # Move ficha
         to_casilla.ficha = from_casilla.ficha
-        from_casilla.ficha = Casilla.P_NONE
+        from_casilla.ficha = Casilla.F_VACIA
 
         # Update outline
         #to_casilla.outline = Casilla.O_MOVED
@@ -277,14 +282,14 @@ class Hopper():
 
         print("Piece moved from `" + str(from_casilla) +
             "` to `" + str(to_casilla) + "`, " + ("green's" if
-            self.current_player == Casilla.P_RED else "red's") + " turn...")
+            self.current_player == Casilla.F_ROJA else "red's") + " turn...")
 
     def find_winner(self):
 
-        if all(g.ficha == Casilla.P_GREEN for g in self.r_goals):
-            return Casilla.P_GREEN
-        elif all(g.ficha == Casilla.P_RED for g in self.g_goals):
-            return Casilla.P_RED
+        if all(g.ficha == Casilla.F_VERDE for g in self.lado_rojo):
+            return Casilla.F_VERDE
+        elif all(g.ficha == Casilla.F_ROJA for g in self.lado_verde):
+            return Casilla.F_ROJA
         else:
             return None
 
@@ -301,17 +306,17 @@ class Hopper():
 
                 casilla = self.tablero[fila][col]
 
-                if casilla.ficha == Casilla.P_GREEN:
-                    distances = [point_distance(casilla.loc, g.loc) for g in
-                                 self.r_goals if g.ficha != Casilla.P_GREEN]
+                if casilla.ficha == Casilla.F_VERDE:
+                    distances = [point_distance(casilla.posicion, g.posicion) for g in
+                                 self.lado_rojo if g.ficha != Casilla.F_VERDE]
                     value -= max(distances) if len(distances) else -50
 
-                elif casilla.ficha == Casilla.P_RED:
-                    distances = [point_distance(casilla.loc, g.loc) for g in
-                                 self.g_goals if g.ficha != Casilla.P_RED]
+                elif casilla.ficha == Casilla.F_ROJA:
+                    distances = [point_distance(casilla.posicion, g.posicion) for g in
+                                 self.lado_verde if g.ficha != Casilla.F_ROJA]
                     value += max(distances) if len(distances) else -50
 
-        if player == Casilla.P_RED:
+        if player == Casilla.F_ROJA:
             value *= -1
 
         return value
@@ -346,17 +351,17 @@ class Hopper():
         #print(self.ai_player, "ai_player")
         if winner:
             print("The " + ("green"
-                if winner == Casilla.P_GREEN else "red") + " player has won!")
+                if winner == Casilla.F_VERDE else "red") + " player has won!")
             self.current_player = None
 
             print()
             print("Final Stats")
             print("===========")
             print("Final winner:", "green"
-                if winner == Casilla.P_GREEN else "red")
+                if winner == Casilla.F_VERDE else "red")
             print("Total # of plies:", self.total_plies)
         elif self.ai_player is not None:
             self.execute_ai_move()
         else:  # Toggle the current player
-            self.current_player = (Casilla.P_RED
-                if self.current_player == Casilla.P_GREEN else Casilla.P_GREEN)
+            self.current_player = (Casilla.F_ROJA
+                if self.current_player == Casilla.F_VERDE else Casilla.F_VERDE)
