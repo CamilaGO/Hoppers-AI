@@ -22,9 +22,9 @@ class Hopper():
         self.tablero = tablero
         self.current_player = Casilla.F_VERDE #empieza a jugar el humano, jugador 1
         self.casilla_selected = None
-        self.valid_moves = []
+        self.valid_movs = []
         self.calculando = False
-        self.total_plies = 0
+        self.jugadas_totales = 0
         # se activa alpha-beta con profundidad 3
         self.profundidad = 3
         # creacion del tablero segun la ubicacion de las casillas
@@ -62,229 +62,216 @@ class Hopper():
                 beta=float("inf"), maxing=True, prunes=0, tableros=0):
 
         # Bottomed out base case
-        if depth == 0 or self.find_winner() or time.time() > max_time:
+        if depth == 0 or self.deter_ganador() or time.time() > max_time:
             return self.utility_distance(player_to_max), None, prunes, tableros
 
-        # Setup initial variables and find moves
-        best_move = None
+        # Setup initial variables and find movs
+        best_mov = None
         if maxing:
             best_val = float("-inf")
-            moves = self.get_next_moves(player_to_max)
+            movs = self.siguientes_movs(player_to_max)
         else:
             best_val = float("inf")
-            moves = self.get_next_moves((Casilla.F_ROJA
+            movs = self.siguientes_movs((Casilla.F_ROJA
                     if player_to_max == Casilla.F_VERDE else Casilla.F_VERDE))
-        # For each move
-        for move in moves:
-            #print(move)
-            for to in move["to"]:
+        # For each mov
+        for mov in movs:
+            #print(mov)
+            for to in mov["to"]:
                 #print(to)
 
                 # Bail out when we're out of time
                 if time.time() > max_time:
-                    return best_val, best_move, prunes, tableros
+                    return best_val, best_mov, prunes, tableros
 
-                # Move ficha to the move outlined
-                ficha = move["from"].ficha
-                move["from"].ficha = Casilla.F_VACIA
+                # Move ficha to the mov outlined
+                ficha = mov["from"].ficha
+                mov["from"].ficha = Casilla.F_VACIA
                 to.ficha = ficha
                 tableros += 1
 
                 # Recursively call self
                 #se vuelve a llamar de acuerdo a la profundidad programada para poder ver la mejor jugada a largo plazo
-                val, _, new_prunes, new_tableros = self.minimax(depth - 1,
+                val, _, nueva_prunes, nueva_tableros = self.minimax(depth - 1,
                     player_to_max, max_time, alpha, beta, not maxing, prunes, tableros)
-                prunes = new_prunes
-                tableros = new_tableros
+                prunes = nueva_prunes
+                tableros = nueva_tableros
 
                 # Move the ficha back
                 to.ficha = Casilla.F_VACIA
-                move["from"].ficha = ficha
+                mov["from"].ficha = ficha
 
                 if maxing and val > best_val:
                     best_val = val
                     """print("*************************")
                     print(to.posicion)"""
-                    best_move = (move["from"].posicion, to.posicion)
+                    best_mov = (mov["from"].posicion, to.posicion)
                     alpha = max(alpha, val)
 
                 if not maxing and val < best_val:
                     best_val = val
-                    best_move = (move["from"].posicion, to.posicion)
+                    best_mov = (mov["from"].posicion, to.posicion)
                     beta = min(beta, val)
 
                 if beta <= alpha:
-                    return best_val, best_move, prunes + 1, tableros
+                    return best_val, best_mov, prunes + 1, tableros
 
-        return best_val, best_move, prunes, tableros
+        return best_val, best_mov, prunes, tableros
 
-    def execute_ai_move(self):
-        #print(self.ai_player, "ai_player")
-
-        # Print out search information
-        current_turn = (self.total_plies // 2) + 1
-        print("Turn", current_turn, "Computation")
-        print("=================" + ("=" * len(str(current_turn))))
-        print("Executing search ...", end=" ")
+    def ejecutar_mov_ai(self):
+        print("\n___________________________________________")
+        print("|     Turno de la computadora con AI      |")
+        print("*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*\n")
+        print("Buscando la mejor movida ...")
         sys.stdout.flush()
 
-        # self.tablero_view.set_status("Computing next move...")
+        #se calcula los movimiento del AI
         self.calculando = True
         max_time = time.time() + self.t_limit
 
         # Execute minimax search
-        start = time.time()
-        _, move, prunes, tableros = self.minimax(self.profundidad,
-            self.ai_player, max_time)
-        end = time.time()
+        inicio = time.time()
+        _, mov, prunes, tableros = self.minimax(self.profundidad, self.ai_player, max_time)
+        fin = time.time()
 
-        # Print search result stats
-        print("complete")
-        print("Time to compute:", round(end - start, 4))
-        print("Total tableros generated:", tableros)
-        print("Total prune events:", prunes)
+        # Se imprime el tiempo
+        print("Tiempo de busqueda:", round(fin - inicio, 4))
+        #print("Total tableros generados:", tableros)
+        #print("Total eventos cortados:", prunes)
 
-        # Move the resulting ficha
-        #self.outline_casillas(None)  # Reset outlines
-        """MOVE ES EL MOVIMIENTO DE AI"""
-        print("MOVEEE")
-        print(move)
-        move_from = self.tablero[move[0][0]][move[0][1]]
-        move_to = self.tablero[move[1][0]][move[1][1]]
-        self.move_ficha(move_from, move_to)
+        # Movimiento realizado
+        print("Movimiento realizado:", mov[0], "-->", mov[1])
+        mov_from = self.tablero[mov[0][0]][mov[0][1]]
+        mov_to = self.tablero[mov[1][0]][mov[1][1]]
+        self.mover_ficha(mov_from, mov_to)
 
-        winner = self.find_winner()
-        if winner:
-            print("The " + ("green"
-                if winner == Casilla.F_VERDE else "red") + " player has won!")
+        ganador = self.deter_ganador()
+        if ganador:
+            print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+            if ganador == Casilla.F_VERDE:
+                print("El jugador 1 (humano) es el ganador!")
+            else:
+                print("El jugador 2 (AI) es el ganador!")
+            print("¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡")
             self.current_player = None
 
             print()
-            print("Final Stats")
-            print("===========")
-            print("Final winner:", "green"
-                if winner == Casilla.F_VERDE else "red")
-            print("Total # of plies:", self.total_plies)
+            print("Total de jugadas: ", self.jugadas_totales)
 
-        else:  # Toggle the current player
+        else:  # Se cambia de jugador
             self.current_player = (Casilla.F_ROJA
                 if self.current_player == Casilla.F_VERDE else Casilla.F_VERDE)
 
         self.calculando = False
         print()
 
-    def get_next_moves(self, player=1):
-
-        moves = []  # All possible moves
+    def siguientes_movs(self, player=1):
+        movs = []  # All possible movs
         for col in range(self.tab_size):
             for fila in range(self.tab_size):
 
                 curr_casilla = self.tablero[fila][col]
 
-                # Skip tablero elements that are not the current player
+                # Ignorar las fichas que no son del jugador
                 if curr_casilla.ficha != player:
                     continue
 
-                move = {
+                mov = {
                     "from": curr_casilla,
-                    "to": self.get_moves_at_casilla(curr_casilla, player)
+                    "to": self.buscar_movs_casilla(curr_casilla, player)
                 }
-                moves.append(move)
+                movs.append(mov)
 
-        return moves
+        return movs
 
-    def get_moves_at_casilla(self, casilla, player, moves=None, adj=True):
+    def buscar_movs_casilla(self, casilla, player, movs=None, adj=True):
+        valid_casillas = [Casilla.C_VACIA, Casilla.C_VERDE, Casilla.C_ROJA]
 
-        if moves is None:
-            moves = []
+        if movs is None:
+            movs = []
 
         fila = casilla.posicion[0]
         col = casilla.posicion[1]
 
-        # List of valid casilla types to move to
-        valid_casillas = [Casilla.C_VACIA, Casilla.C_VERDE, Casilla.C_ROJA]
+    
         if casilla.casilla != player:
-            #print("ya estas aqui men")
-            valid_casillas.remove(player)  # Moving back into your own goal
+            #No se le permite regresar a su lado su ya salio
+            valid_casillas.remove(player) 
         if casilla.casilla != Casilla.C_VACIA and casilla.casilla != player:
-            #print("pa que te vassssss")
-            valid_casillas.remove(Casilla.C_VACIA)  # Moving out of the enemy's goal
+            #No se le permite salir si ya llego al lado del contrincante
+            valid_casillas.remove(Casilla.C_VACIA)  
 
-        # Find and save immediately adjacent moves
-        for col_delta in range(-1, 2):
-            for fila_delta in range(-1, 2):
+        # Movimientos a casillas vecinas
+        for col_vecina in range(-1, 2):
+            for fila_vecina in range(-1, 2):
 
-                # Check adjacent casillas
+                # Casillas adyacentes en fila y columna
 
-                new_fila = fila + fila_delta
-                new_col = col + col_delta
+                nueva_fila = fila + fila_vecina
+                nueva_col = col + col_vecina
 
-                # Skip checking degenerate values
-                #para revisar que no me estoy saliendo del tablero
-                if ((new_fila == fila and new_col == col) or
-                    new_fila < 0 or new_col < 0 or
-                    new_fila >= self.tab_size or new_col >= self.tab_size):
+                #comprobar que el movimiento sea dentro del tablero o no sea estatico
+                if ((nueva_fila == fila and nueva_col == col) or
+                    nueva_fila < 0 or nueva_col < 0 or
+                    nueva_fila >= self.tab_size or nueva_col >= self.tab_size):
                     continue
 
-                # Handle moves out of/in to goals
-                new_casilla = self.tablero[new_fila][new_col]
+                # Obtener la ubicacion de la nueva casilla en el tablero
+                nueva_casilla = self.tablero[nueva_fila][nueva_col]
                 
-                if new_casilla.casilla not in valid_casillas: # para no poder regresar a mi área después de salir
-                    """print("no es valid casillas")
-                    print(valid_casillas)
-                    print(new_casilla.casilla)"""
+                if nueva_casilla.casilla not in valid_casillas: 
+                    # Movimiento invalido
+                    # evita poder regresar a su área después de salir
                     continue
                 
 
-                if new_casilla.ficha == Casilla.F_VACIA:
-                    if adj:  # Don't consider adjacent on subsequent calls 
-                    #si hay un movimiento para seguirle dando
-                        moves.append(new_casilla)
+                if nueva_casilla.ficha == Casilla.F_VACIA:
+                    if adj:   
+                    # se siguen buscando mas movimeintos desde la nueva casilla
+                        movs.append(nueva_casilla)
                     continue
 
-                # Check jump casillas
+                # saltar varias veces entre fichas (recursion)
 
-                new_fila = new_fila + fila_delta
-                new_col = new_col + col_delta
+                nueva_fila = nueva_fila + fila_vecina
+                nueva_col = nueva_col + col_vecina
 
-                # Skip checking degenerate values
-                if (new_fila < 0 or new_col < 0 or
-                    new_fila >= self.tab_size or new_col >= self.tab_size):
+                # Ignorar ubicaciones fuera del tablero
+                if (nueva_fila < 0 or nueva_col < 0 or
+                    nueva_fila >= self.tab_size or nueva_col >= self.tab_size):
                     continue
 
-                # Handle returning moves and moves out of/in to goals
-                new_casilla = self.tablero[new_fila][new_col] #para no poder regresar a mi área 
-                if new_casilla in moves or (new_casilla.casilla not in valid_casillas):
+                # No permitir retroceso 
+                nueva_casilla = self.tablero[nueva_fila][nueva_col] 
+                if nueva_casilla in movs or (nueva_casilla.casilla not in valid_casillas):
                     continue
 
-                if new_casilla.ficha == Casilla.F_VACIA:
-                    moves.insert(0, new_casilla)  # Prioritize jumps
-                    self.get_moves_at_casilla(new_casilla, player, moves, False)
+                if nueva_casilla.ficha == Casilla.F_VACIA:
+                    movs.insert(0, nueva_casilla)  # mas saltos con recursividad
+                    self.buscar_movs_casilla(nueva_casilla, player, movs, False)
 
-        return moves
+        return movs
 
-    def move_ficha(self, from_casilla, to_casilla):
+    def mover_ficha(self, from_casilla, to_casilla):
 
-        # Handle trying to move a non-existant ficha and moving into a ficha
+        # introdujo una casilla de salida vacia o una de meta ocupada
         if from_casilla.ficha == Casilla.F_VACIA or to_casilla.ficha != Casilla.F_VACIA:
-            print("Invalid move")
+            print("Invalid mov")
             return
 
-        # Move ficha
+        # Se actualizan las casillas, es decir que se ocupa y libera 
         to_casilla.ficha = from_casilla.ficha
         from_casilla.ficha = Casilla.F_VACIA
 
-        # Update outline
-        #to_casilla.outline = Casilla.O_MOVED
-        #from_casilla.outline = Casilla.O_MOVED
+        self.jugadas_totales += 1
 
-        self.total_plies += 1
+        #se indica el siguiente jugador
+        """if self.current_player == Casilla.F_ROJA:
+            print("Es el turno del jugador 1 (humano)")
+        else:
+            print("Es el turno del jugador 2 (AI)")"""
 
-        print("Piece moved from `" + str(from_casilla) +
-            "` to `" + str(to_casilla) + "`, " + ("green's" if
-            self.current_player == Casilla.F_ROJA else "red's") + " turn...")
-
-    def find_winner(self):
+    def deter_ganador(self):
 
         if all(g.ficha == Casilla.F_VERDE for g in self.lado_rojo):
             return Casilla.F_VERDE
@@ -322,46 +309,38 @@ class Hopper():
         return value
     
     #mi jugada
-    def execute_player_move(self):
+    def ejecutar_mov_humano(self):
 
-        current_turn = (self.total_plies // 2) + 1
-        print("Turn", current_turn, "Player")
-        print("=================" + ("=" * len(str(current_turn))))
+        print("\n___________________________________________")
+        print("|             Tu turno humano             |")
+        print("*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*\n")
         sys.stdout.flush()
 
         inputOld = (input("Ingrese fila, columna actual: "))
         oldLocation = inputOld.split(", ")
-        print(oldLocation)
 
         inputNew = (input("Ingrese fila, columna objetivo: "))
-        newLocation = inputNew.split(", ")
-        print(newLocation)
-
-        #fila_old = int(input("Ingrese fila actual: "))
-        #col_old = int(input("Ingrese columna actual: "))
-
-        #fila_new = int(input("Ingrese fila objetivo: "))
-        #col_new = int(input("Ingrese columna objetivo: "))
+        nuevaLocation = inputNew.split(", ")
+        print("Movimiento realizado: ("+inputOld+") --> ("+inputNew+")" )
         
-        move_from = self.tablero[int(oldLocation[0])][int(oldLocation[1])]
-        move_to = self.tablero[int(newLocation[0])][int(newLocation[1])]
-        self.move_ficha(move_from, move_to)
+        mov_from = self.tablero[int(oldLocation[0])][int(oldLocation[1])]
+        mov_to = self.tablero[int(nuevaLocation[0])][int(nuevaLocation[1])]
+        self.mover_ficha(mov_from, mov_to)
 
-        winner = self.find_winner()
-        #print(self.ai_player, "ai_player")
-        if winner:
-            print("The " + ("green"
-                if winner == Casilla.F_VERDE else "red") + " player has won!")
+        ganador = self.deter_ganador()
+        if ganador:
+            print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+            if ganador == Casilla.F_VERDE:
+                print("El jugador 1 (humano) es el ganador!")
+            else:
+                print("El jugador 2 (AI) es el ganador!")
+            print("¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡")
             self.current_player = None
 
             print()
-            print("Final Stats")
-            print("===========")
-            print("Final winner:", "green"
-                if winner == Casilla.F_VERDE else "red")
-            print("Total # of plies:", self.total_plies)
+            print("Total de jugadas: ", self.jugadas_totales)
         elif self.ai_player is not None:
-            self.execute_ai_move()
-        else:  # Toggle the current player
+            self.ejecutar_mov_ai()
+        else:  # Se cambia de jugador
             self.current_player = (Casilla.F_ROJA
                 if self.current_player == Casilla.F_VERDE else Casilla.F_VERDE)

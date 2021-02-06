@@ -6,7 +6,7 @@ ready = input("Ready to play Hoppers with AI? y/n: ")
 if ready == "y":
     #se empieza el juego
     print("\n================== GAME STARTED ==================\n")
-    while hopper.find_winner() == None:
+    while hopper.deter_ganador() == None:
         i = 0
         for fila in hopper.tablero:
             if fila == hopper.tablero[0]:
@@ -24,7 +24,7 @@ if ready == "y":
                 print("  |*******************************|")
                 print("    0  1  2  3  4  5  6  7  8  9")
         #print("  |*******************************|")
-        hopper.execute_player_move()
+        hopper.ejecutar_mov_humano()
 elif ready == "n":
     print("\nBye!!!")
 else:
