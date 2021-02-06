@@ -103,8 +103,6 @@ class Hopper():
 
                 if maxing and val > best_val:
                     best_val = val
-                    """print("*************************")
-                    print(to.posicion)"""
                     best_mov = (mov["from"].posicion, to.posicion)
                     alpha = max(alpha, val)
 
@@ -273,11 +271,36 @@ class Hopper():
 
     def deter_ganador(self):
 
-        if all(g.ficha == Casilla.F_VERDE for g in self.lado_rojo):
+        verdesListos = []
+        for v in self.lado_rojo:
+            if v.ficha == Casilla.F_VERDE:
+                #el verde llego a la casilla roja
+                verdesListos.append(v)
+        
+        rojosListos = []
+        for r in self.lado_verde:
+            if r.ficha == Casilla.F_ROJA:
+                #el rojo llego a la casilla verde
+                rojosListos.append(r)
+
+        """"if all(g.ficha == Casilla.F_VERDE for g in self.lado_rojo):
+            #gano el humano, devuelve 1
             return Casilla.F_VERDE
         elif all(g.ficha == Casilla.F_ROJA for g in self.lado_verde):
+            #gano el AI, devuelve 2
             return Casilla.F_ROJA
         else:
+            #nadie gano
+            return None"""
+        
+        if (verdesListos == self.lado_rojo):
+            #gano el humano, devuelve 1
+            return Casilla.F_VERDE
+        elif (rojosListos == self.lado_verde):
+            #gano el AI, devuelve 2
+            return Casilla.F_ROJA
+        else:
+            #nadie gano
             return None
 
 
