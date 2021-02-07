@@ -61,11 +61,10 @@ class Hopper():
     def minimax(self, depth, player_to_max, max_time, alpha=float("-inf"),
                 beta=float("inf"), maxing=True, prunes=0, tableros=0):
 
-        # Bottomed out base case
         if depth == 0 or self.deter_ganador() or time.time() > max_time:
-            return self.utility_distance(player_to_max), None, prunes, tableros
+            return self.distancia_util(player_to_max), None, prunes, tableros
 
-        # Setup initial variables and find movs
+        # variables iniciales para encontrar movimientos
         best_mov = None
         if maxing:
             best_val = float("-inf")
@@ -74,39 +73,39 @@ class Hopper():
             best_val = float("inf")
             movs = self.siguientes_movs((Casilla.F_ROJA
                     if player_to_max == Casilla.F_VERDE else Casilla.F_VERDE))
-        # For each mov
+        # revisar cada movimiento 
         for mov in movs:
-            #print(mov)
             for to in mov["to"]:
-                #print(to)
 
-                # Bail out when we're out of time
+                # Se acaba el tiempo
                 if time.time() > max_time:
                     return best_val, best_mov, prunes, tableros
 
-                # Move ficha to the mov outlined
+                # mover la ficha seleccionada
                 ficha = mov["from"].ficha
                 mov["from"].ficha = Casilla.F_VACIA
                 to.ficha = ficha
                 tableros += 1
 
-                # Recursively call self
-                #se vuelve a llamar de acuerdo a la profundidad programada para poder ver la mejor jugada a largo plazo
+                # Recursividad
+                # para ver la mejor llamada a futuro se vuelve a llamar segun a la profundidad determinada
                 val, _, nueva_prunes, nueva_tableros = self.minimax(depth - 1,
                     player_to_max, max_time, alpha, beta, not maxing, prunes, tableros)
                 prunes = nueva_prunes
                 tableros = nueva_tableros
 
-                # Move the ficha back
+                # se regresa la ficha
                 to.ficha = Casilla.F_VACIA
                 mov["from"].ficha = ficha
 
                 if maxing and val > best_val:
+                    #si es max (jugador 1)
                     best_val = val
                     best_mov = (mov["from"].posicion, to.posicion)
                     alpha = max(alpha, val)
 
                 if not maxing and val < best_val:
+                    #si no es max (jugador AI)
                     best_val = val
                     best_mov = (mov["from"].posicion, to.posicion)
                     beta = min(beta, val)
@@ -263,11 +262,6 @@ class Hopper():
 
         self.jugadas_totales += 1
 
-        #se indica el siguiente jugador
-        """if self.current_player == Casilla.F_ROJA:
-            print("Es el turno del jugador 1 (humano)")
-        else:
-            print("Es el turno del jugador 2 (AI)")"""
 
     def deter_ganador(self):
 
@@ -282,16 +276,6 @@ class Hopper():
             if r.ficha == Casilla.F_ROJA:
                 #el rojo llego a la casilla verde
                 rojosListos.append(r)
-
-        """"if all(g.ficha == Casilla.F_VERDE for g in self.lado_rojo):
-            #gano el humano, devuelve 1
-            return Casilla.F_VERDE
-        elif all(g.ficha == Casilla.F_ROJA for g in self.lado_verde):
-            #gano el AI, devuelve 2
-            return Casilla.F_ROJA
-        else:
-            #nadie gano
-            return None"""
         
         if (verdesListos == self.lado_rojo):
             #gano el humano, devuelve 1
@@ -304,26 +288,40 @@ class Hopper():
             return None
 
 
-    def utility_distance(self, player):
+    def distancia_util(self, player):
 
-        def point_distance(p0, p1):
-            return math.sqrt((p1[0] - p0[0])**2 + (p1[1] - p0[1])**2)
+        def heuristic(p0, p1):
+            #basada en la lectura de http://theory.stanford.edu/~amitp/GameProgramming/Heuristics.html
+            D = 1
+            dx = abs(p0[0] - p1[0])
+            dy = abs(p0[1] - p1[1])
+            return D * (dx + dy)
 
         value = 0
-
+        
         for col in range(self.tab_size):
             for fila in range(self.tab_size):
 
                 casilla = self.tablero[fila][col]
 
                 if casilla.ficha == Casilla.F_VERDE:
-                    distances = [point_distance(casilla.posicion, g.posicion) for g in
-                                 self.lado_rojo if g.ficha != Casilla.F_VERDE]
+                    distances = []
+                    for i in self.lado_rojo:
+                        if i.ficha != Casilla.F_VERDE:
+                            distances.append(heuristic(casilla.posicion, i.posicion))
+
+                    """distances = [heuristic(casilla.posicion, g.posicion) for g in
+                                 self.lado_rojo if g.ficha != Casilla.F_VERDE]"""
                     value -= max(distances) if len(distances) else -50
 
                 elif casilla.ficha == Casilla.F_ROJA:
-                    distances = [point_distance(casilla.posicion, g.posicion) for g in
-                                 self.lado_verde if g.ficha != Casilla.F_ROJA]
+                    distances = []
+                    for i in self.lado_verde:
+                        if i.ficha != Casilla.F_ROJA:
+                            distances.append(heuristic(casilla.posicion, i.posicion))
+
+                    """distances = [heuristic(casilla.posicion, g.posicion) for g in
+                                 self.lado_verde if g.ficha != Casilla.F_ROJA]"""
                     value += max(distances) if len(distances) else -50
 
         if player == Casilla.F_ROJA:
@@ -331,7 +329,7 @@ class Hopper():
 
         return value
     
-    #mi jugada
+
     def ejecutar_mov_humano(self):
 
         print("\n___________________________________________")
