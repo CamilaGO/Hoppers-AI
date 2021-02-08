@@ -27,35 +27,7 @@ class Hopper():
         self.jugadas_totales = 0
         # se activa alpha-beta con profundidad 3
         self.profundidad = 3
-        # creacion del tablero segun la ubicacion de las casillas
-        for fila in range(tab_size):
-            for col in range(tab_size):
-
-                if fila + col < 5:
-                    #si es la diagonal izquierda superior se coposicionan las fichas de AI (player 2)
-                    espacio = Casilla(2, 2, fila, col)
-                elif 1 + fila + col > 2 * (tab_size - 3):
-                    #si es la diagonal derecha inferior se coposicionan las fichas del humano (player 1)
-                    espacio = Casilla(1, 1, fila, col)
-                else:
-                    #si es el centro se deja en blanco, campo para jugar 
-                    espacio = Casilla(0, 0, fila, col)
-
-                tablero[fila][col] = espacio
-
-        #se ven las ubicaciones de las casilla rojas y se guardan
-        self.lado_rojo = []
-        for fila in tablero:
-            for i in fila:
-                if i.casilla == Casilla.C_ROJA:
-                    self.lado_rojo.append(i)
-        #se ven las ubicaciones de las casilla verdes y se guardan
-        self.lado_verde = []
-        for fila in tablero:
-            for i in fila:
-                if i.casilla == Casilla.C_VERDE:
-                    self.lado_verde.append(i)
-
+        self.crear_tablero()
 
 
     def minimax(self, depth, player_to_max, max_time, alpha=float("-inf"),
@@ -365,3 +337,33 @@ class Hopper():
         else:  # Se cambia de jugador
             self.current_player = (Casilla.F_ROJA
                 if self.current_player == Casilla.F_VERDE else Casilla.F_VERDE)
+
+    def crear_tablero(self):
+            # creacion del tablero segun la ubicacion de las casillas
+            for fila in range(self.tab_size):
+                for col in range(self.tab_size):
+
+                    if fila + col < 5:
+                        #si es la diagonal izquierda superior se coposicionan las fichas de AI (player 2)
+                        espacio = Casilla(2, 2, fila, col)
+                    elif 1 + fila + col > 2 * (self.tab_size - 3):
+                        #si es la diagonal derecha inferior se coposicionan las fichas del humano (player 1)
+                        espacio = Casilla(1, 1, fila, col)
+                    else:
+                        #si es el centro se deja en blanco, campo para jugar 
+                        espacio = Casilla(0, 0, fila, col)
+
+                    self.tablero[fila][col] = espacio
+
+            #se ven las ubicaciones de las casilla rojas y se guardan
+            self.lado_rojo = []
+            for fila in self.tablero:
+                for i in fila:
+                    if i.casilla == Casilla.C_ROJA:
+                        self.lado_rojo.append(i)
+            #se ven las ubicaciones de las casilla verdes y se guardan
+            self.lado_verde = []
+            for fila in self.tablero:
+                for i in fila:
+                    if i.casilla == Casilla.C_VERDE:
+                        self.lado_verde.append(i)
