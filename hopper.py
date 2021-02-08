@@ -11,7 +11,7 @@ from casilla import Casilla
 
 class Hopper():
 
-    def __init__(self, tab_size=10, t_limit=60, ai_player=Casilla.F_ROJA):
+    def __init__(self, tab_size=10, t_limit=60, ai_player=Casilla.F_BLANCA):
 
         # tamaño del tablero e inicializacion de variables
         tablero = [[None] * tab_size for _ in range(tab_size)]
@@ -20,7 +20,7 @@ class Hopper():
         self.t_limit = t_limit
         self.ai_player = ai_player
         self.tablero = tablero
-        self.current_player = Casilla.F_VERDE #empieza a jugar el humano, jugador 1
+        self.current_player = Casilla.F_NEGRA #empieza a jugar el humano, jugador 1
         self.casilla_selected = None
         self.valid_movs = []
         self.calculando = False
@@ -43,8 +43,8 @@ class Hopper():
             movs = self.siguientes_movs(player_to_max)
         else:
             best_val = float("inf")
-            movs = self.siguientes_movs((Casilla.F_ROJA
-                    if player_to_max == Casilla.F_VERDE else Casilla.F_VERDE))
+            movs = self.siguientes_movs((Casilla.F_BLANCA
+                    if player_to_max == Casilla.F_NEGRA else Casilla.F_NEGRA))
         # revisar cada movimiento 
         for mov in movs:
             for to in mov["to"]:
@@ -117,7 +117,7 @@ class Hopper():
         ganador = self.deter_ganador()
         if ganador:
             print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-            if ganador == Casilla.F_VERDE:
+            if ganador == Casilla.F_NEGRA:
                 print("El jugador 1 (humano) es el ganador!")
             else:
                 print("El jugador 2 (AI) es el ganador!")
@@ -128,8 +128,8 @@ class Hopper():
             print("Total de jugadas: ", self.jugadas_totales)
 
         else:  # Se cambia de jugador
-            self.current_player = (Casilla.F_ROJA
-                if self.current_player == Casilla.F_VERDE else Casilla.F_VERDE)
+            self.current_player = (Casilla.F_BLANCA
+                if self.current_player == Casilla.F_NEGRA else Casilla.F_NEGRA)
 
         self.calculando = False
         print()
@@ -154,7 +154,7 @@ class Hopper():
         return movs
 
     def buscar_movs_casilla(self, casilla, player, movs=None, adj=True):
-        valid_casillas = [Casilla.C_VACIA, Casilla.C_VERDE, Casilla.C_ROJA]
+        valid_casillas = [Casilla.C_VACIA, Casilla.C_NEGRA, Casilla.C_BLANCA]
 
         if movs is None:
             movs = []
@@ -237,24 +237,24 @@ class Hopper():
 
     def deter_ganador(self):
 
-        verdesListos = []
-        for v in self.lado_rojo:
-            if v.ficha == Casilla.F_VERDE:
-                #el verde llego a la casilla roja
-                verdesListos.append(v)
+        negrosListos = []
+        for n in self.lado_blanco:
+            if n.ficha == Casilla.F_NEGRA:
+                #el negra llego a la casilla blanca
+                negrosListos.append(n)
         
-        rojosListos = []
-        for r in self.lado_verde:
-            if r.ficha == Casilla.F_ROJA:
-                #el rojo llego a la casilla verde
-                rojosListos.append(r)
+        blancosListos = []
+        for b in self.lado_negro:
+            if b.ficha == Casilla.F_BLANCA:
+                #el blanco llego a la casilla negra
+                blancosListos.append(b)
         
-        if (verdesListos == self.lado_rojo):
+        if (negrosListos == self.lado_blanco):
             #gano el humano, devuelve 1
-            return Casilla.F_VERDE
-        elif (rojosListos == self.lado_verde):
+            return Casilla.F_NEGRA
+        elif (blancosListos == self.lado_negro):
             #gano el AI, devuelve 2
-            return Casilla.F_ROJA
+            return Casilla.F_BLANCA
         else:
             #nadie gano
             return None
@@ -276,27 +276,23 @@ class Hopper():
 
                 casilla = self.tablero[fila][col]
 
-                if casilla.ficha == Casilla.F_VERDE:
+                if casilla.ficha == Casilla.F_NEGRA:
                     distances = []
-                    for i in self.lado_rojo:
-                        if i.ficha != Casilla.F_VERDE:
+                    for i in self.lado_blanco:
+                        if i.ficha != Casilla.F_NEGRA:
                             distances.append(heuristic(casilla.posicion, i.posicion))
 
-                    """distances = [heuristic(casilla.posicion, g.posicion) for g in
-                                 self.lado_rojo if g.ficha != Casilla.F_VERDE]"""
                     value -= max(distances) if len(distances) else -50
 
-                elif casilla.ficha == Casilla.F_ROJA:
+                elif casilla.ficha == Casilla.F_BLANCA:
                     distances = []
-                    for i in self.lado_verde:
-                        if i.ficha != Casilla.F_ROJA:
+                    for i in self.lado_negro:
+                        if i.ficha != Casilla.F_BLANCA:
                             distances.append(heuristic(casilla.posicion, i.posicion))
 
-                    """distances = [heuristic(casilla.posicion, g.posicion) for g in
-                                 self.lado_verde if g.ficha != Casilla.F_ROJA]"""
                     value += max(distances) if len(distances) else -50
 
-        if player == Casilla.F_ROJA:
+        if player == Casilla.F_BLANCA:
             value *= -1
 
         return value
@@ -323,7 +319,7 @@ class Hopper():
         ganador = self.deter_ganador()
         if ganador:
             print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-            if ganador == Casilla.F_VERDE:
+            if ganador == Casilla.F_NEGRA:
                 print("El jugador 1 (humano) es el ganador!")
             else:
                 print("El jugador 2 (AI) es el ganador!")
@@ -335,8 +331,8 @@ class Hopper():
         elif self.ai_player is not None:
             self.ejecutar_mov_ai()
         else:  # Se cambia de jugador
-            self.current_player = (Casilla.F_ROJA
-                if self.current_player == Casilla.F_VERDE else Casilla.F_VERDE)
+            self.current_player = (Casilla.F_BLANCA
+                if self.current_player == Casilla.F_NEGRA else Casilla.F_NEGRA)
 
     def crear_tablero(self):
             # creacion del tablero segun la ubicacion de las casillas
@@ -355,15 +351,15 @@ class Hopper():
 
                     self.tablero[fila][col] = espacio
 
-            #se ven las ubicaciones de las casilla rojas y se guardan
-            self.lado_rojo = []
+            #se ven las ubicaciones de las casilla blancas y se guardan
+            self.lado_blanco = []
             for fila in self.tablero:
                 for i in fila:
-                    if i.casilla == Casilla.C_ROJA:
-                        self.lado_rojo.append(i)
-            #se ven las ubicaciones de las casilla verdes y se guardan
-            self.lado_verde = []
+                    if i.casilla == Casilla.C_BLANCA:
+                        self.lado_blanco.append(i)
+            #se ven las ubicaciones de las casilla negras y se guardan
+            self.lado_negro = []
             for fila in self.tablero:
                 for i in fila:
-                    if i.casilla == Casilla.C_VERDE:
-                        self.lado_verde.append(i)
+                    if i.casilla == Casilla.C_NEGRA:
+                        self.lado_negro.append(i)

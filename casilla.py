@@ -16,13 +16,13 @@ class Casilla():
 
     # constantes segun la ubicacion de la casilla
     C_VACIA = 0
-    C_VERDE = 1
-    C_ROJA = 2
+    C_NEGRA = 1
+    C_BLANCA = 2
 
     # constantes segun la ficha
     F_VACIA = 0
-    F_VERDE = 1
-    F_ROJA = 2
+    F_NEGRA = 1
+    F_BLANCA = 2
 
     def __init__(self, casilla=0, ficha=0, fila=0, col=0):
         self.casilla = casilla #el color/valor de la casilla
