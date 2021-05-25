@@ -144,7 +144,7 @@ class Hopper():
         self.calculando = False
         print()
 
-        #XML that will be returned
+        # XML de movimiento reaizado por AI
         root = minidom.Document()
   
         xml = root.createElement('move') 
@@ -174,7 +174,7 @@ class Hopper():
         xml_str = root.toprettyxml(indent ="\t") 
 
         print(xml_str)
-        return xml_str
+        return  
 
     def siguientes_movs(self, player=1):
         movs = []  # All possible movs
@@ -341,7 +341,6 @@ class Hopper():
     
 
     def ejecutar_mov_humano(self):
-
         print("\n___________________________________________")
         print("|             Tu turno humano             |")
         print("*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*\n")
