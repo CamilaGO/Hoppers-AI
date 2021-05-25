@@ -5,7 +5,7 @@ Febrero 2021 - Semestre 7 """
 import sys
 import time
 import math
-
+from xml.dom import minidom
 from casilla import Casilla
 
 
@@ -27,6 +27,7 @@ class Hopper():
         self.jugadas_totales = 0
         # se activa alpha-beta con profundidad 3
         self.profundidad = 3
+        self.moves_ai=[]
         self.crear_tablero()
 
 
@@ -103,6 +104,10 @@ class Hopper():
         _, mov, prunes, tableros = self.minimax(self.profundidad, self.ai_player, max_time)
         fin = time.time()
 
+        #movimiento seleccionado que se ejecuta y guarda para XML
+        move_from_ai = self.tablero[mov[0][0]][mov[0][1]]
+        self.moves_ai = self.buscar_movs_casilla(move_from_ai, self.ai_player)
+
         # Se imprime el tiempo
         print("Tiempo de busqueda:", round(fin - inicio, 4))
         #print("Total tableros generados:", tableros)
@@ -113,6 +118,11 @@ class Hopper():
         mov_from = self.tablero[mov[0][0]][mov[0][1]]
         mov_to = self.tablero[mov[1][0]][mov[1][1]]
         self.mover_ficha(mov_from, mov_to)
+
+        #se guarda el path hecho
+        for i in self.moves_ai:
+            if (i.posicion==mov_to.posicion):
+                break #para no agregar el path que no hace
 
         ganador = self.deter_ganador()
         if ganador:
@@ -133,6 +143,38 @@ class Hopper():
 
         self.calculando = False
         print()
+
+        #XML that will be returned
+        root = minidom.Document()
+  
+        xml = root.createElement('move') 
+        root.appendChild(xml)
+        
+        productChild = root.createElement('from')
+        productChild.setAttribute('row', str(mov[0][0]))
+        productChild.setAttribute('col', str(mov[0][1]))
+
+        toChild = root.createElement('to')
+        toChild.setAttribute('row', str(mov[1][0]))
+        toChild.setAttribute('col', str(mov[1][1]))
+        
+        xml.appendChild(productChild)
+        xml.appendChild(toChild)
+
+        path = root.createElement('path')
+        xml.appendChild(path)
+        for a in reversed(self.moves_ai):
+            pos1 = root.createElement('pos')
+            pos1.setAttribute('row', str(a.posicion[0]))
+            pos1.setAttribute('col', str(a.posicion[1]))
+            path.appendChild(pos1)
+            if (a.posicion==mov_to.posicion):
+                break
+          
+        xml_str = root.toprettyxml(indent ="\t") 
+
+        print(xml_str)
+        return xml_str
 
     def siguientes_movs(self, player=1):
         movs = []  # All possible movs
